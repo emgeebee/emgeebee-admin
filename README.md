@@ -5,10 +5,10 @@ A modern, secure admin interface for managing long-lived API tokens. Built with 
 ## Features
 
 - **Google OAuth Authentication** - Secure login using Google accounts
-- **Token Management** - Create, view, edit, and delete API tokens
-- **Token Scopes** - Assign and manage scopes for granular access control
-- **Expiration Dates** - Set optional expiration dates for tokens
-- **Usage Tracking** - View when tokens were created and last used
+- **Token Generation** - Create new long-lived API tokens (valid for 365 days)
+- **Token Management** - View and expire tokens
+- **Token Display** - Show/hide and copy tokens securely
+- **Expiration Tracking** - View when tokens were created and when they expire
 - **Responsive Design** - Works seamlessly on desktop and mobile devices
 - **Modern UI** - Clean, accessible interface built with Tailwind CSS
 
@@ -77,7 +77,7 @@ The application will be available at `http://localhost:5173`
 
 ## API Integration
 
-The application expects a backend API at the configured `VITE_API_BASE_URL` with the following endpoints:
+The application integrates with the [trackmyholidays-api](https://github.com/emgeebee/trackmyholidays-api) token management endpoints.
 
 ### Authentication
 - Tokens should be stored in localStorage as `authToken`
@@ -86,26 +86,30 @@ The application expects a backend API at the configured `VITE_API_BASE_URL` with
 ### Endpoints
 
 ```
-GET    /tokens              - List all tokens
-GET    /tokens/:id          - Get a specific token
-POST   /tokens              - Create a new token
-PATCH  /tokens/:id          - Update a token
-DELETE /tokens/:id          - Delete a token
-POST   /tokens/:id/revoke   - Revoke a token
+POST /generateToken    - Generate a new long-lived token
+GET  /tokens          - List all tokens for the authenticated user  
+POST /expireToken     - Expire/delete a token
 ```
 
 ### Token Object Schema
 
 ```typescript
 {
-  id: string
-  name: string
-  description?: string
-  token: string
-  createdAt: string (ISO 8601)
-  expiresAt?: string (ISO 8601)
-  lastUsed?: string (ISO 8601)
-  scopes?: string[]
+  token: string         // The JWT token string
+  userid: string        // User ID who owns the token
+  createdAt: string     // ISO 8601 timestamp
+  expiresAt: string     // ISO 8601 timestamp
+}
+```
+
+### Generate Token Response
+
+```typescript
+{
+  token: string         // The JWT token string
+  sub: string          // Subject (user ID)
+  expiresIn: string    // e.g. "365d"
+  expiresAt: string    // ISO 8601 timestamp
 }
 ```
 
@@ -147,9 +151,7 @@ The GitHub Actions workflow will automatically build and deploy your site.
 ├── src/
 │   ├── components/
 │   │   ├── ui/              # Reusable UI components
-│   │   ├── TokenList.tsx    # Main token list view
-│   │   ├── TokenDialog.tsx  # Create/edit token dialog
-│   │   └── TokenDisplay.tsx # Token display with copy
+│   │   └── TokenList.tsx    # Token list and management
 │   ├── contexts/
 │   │   └── AuthContext.tsx  # Authentication context
 │   ├── services/

@@ -1,4 +1,4 @@
-import type { Token, CreateTokenRequest, UpdateTokenRequest } from "@/types/token"
+import type { Token } from "@/types/token"
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://api.emgeebee.com"
 
@@ -40,36 +40,20 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
 
 export const tokenApi = {
   async getAll(): Promise<Token[]> {
-    return fetchWithAuth("/tokens")
+    const result = await fetchWithAuth("/tokens")
+    return result.tokens || []
   },
 
-  async getById(id: string): Promise<Token> {
-    return fetchWithAuth(`/tokens/${id}`)
-  },
-
-  async create(data: CreateTokenRequest): Promise<Token> {
-    return fetchWithAuth("/tokens", {
+  async create(): Promise<Token> {
+    return fetchWithAuth("/generateToken", {
       method: "POST",
-      body: JSON.stringify(data),
     })
   },
 
-  async update(id: string, data: UpdateTokenRequest): Promise<Token> {
-    return fetchWithAuth(`/tokens/${id}`, {
-      method: "PATCH",
-      body: JSON.stringify(data),
-    })
-  },
-
-  async delete(id: string): Promise<void> {
-    return fetchWithAuth(`/tokens/${id}`, {
-      method: "DELETE",
-    })
-  },
-
-  async revoke(id: string): Promise<void> {
-    return fetchWithAuth(`/tokens/${id}/revoke`, {
+  async delete(token: string): Promise<void> {
+    return fetchWithAuth("/expireToken", {
       method: "POST",
+      body: JSON.stringify({ token }),
     })
   },
 }
