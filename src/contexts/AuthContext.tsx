@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react"
-import { GoogleOAuthProvider, useGoogleLogin } from "@react-oauth/google"
+import { GoogleOAuthProvider, GoogleLogin, CredentialResponse } from "@react-oauth/google"
 
 interface User {
   email: string
@@ -13,6 +13,7 @@ interface AuthContextType {
   isLoading: boolean
   login: () => void
   logout: () => void
+  handleCredentialResponse: (response: CredentialResponse) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -45,37 +46,35 @@ function AuthProviderInner({ children }: AuthProviderInnerProps) {
     setIsLoading(false)
   }, [])
 
-  const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      try {
-        const userInfoResponse = await fetch(
-          "https://www.googleapis.com/oauth2/v3/userinfo",
-          {
-            headers: {
-              Authorization: `Bearer ${tokenResponse.access_token}`,
-            },
-          }
-        )
-        
-        const userInfo = await userInfoResponse.json()
-        const userData: User = {
-          email: userInfo.email,
-          name: userInfo.name,
-          picture: userInfo.picture,
-        }
-        
-        setUser(userData)
-        localStorage.setItem("user", JSON.stringify(userData))
-        localStorage.setItem("authToken", tokenResponse.access_token)
-      } catch (error) {
-        console.error("Failed to fetch user info:", error)
+  const handleCredentialResponse = async (response: CredentialResponse) => {
+    try {
+      if (!response.credential) {
+        console.error("No credential in response")
+        return
       }
-    },
-    onError: (error) => {
-      console.error("Login failed:", error)
-    },
-    flow: 'implicit',
-  })
+
+      // Decode JWT to get user info
+      const base64Url = response.credential.split('.')[1]
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+      }).join(''))
+
+      const payload = JSON.parse(jsonPayload)
+      
+      const userData: User = {
+        email: payload.email,
+        name: payload.name,
+        picture: payload.picture,
+      }
+      
+      setUser(userData)
+      localStorage.setItem("user", JSON.stringify(userData))
+      localStorage.setItem("authToken", response.credential)
+    } catch (error) {
+      console.error("Failed to process credential:", error)
+    }
+  }
 
   const logout = () => {
     setUser(null)
@@ -87,8 +86,9 @@ function AuthProviderInner({ children }: AuthProviderInnerProps) {
     user,
     isAuthenticated: !!user,
     isLoading,
-    login: googleLogin,
+    login: () => {}, // Not needed with GoogleLogin component
     logout,
+    handleCredentialResponse,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
