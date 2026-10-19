@@ -74,6 +74,7 @@ function AuthProviderInner({ children }: AuthProviderInnerProps) {
     onError: (error) => {
       console.error("Login failed:", error)
     },
+    flow: 'implicit',
   })
 
   const logout = () => {
