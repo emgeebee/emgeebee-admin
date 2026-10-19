@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react"
-import { GoogleOAuthProvider, GoogleLogin, CredentialResponse } from "@react-oauth/google"
+import { GoogleOAuthProvider, CredentialResponse } from "@react-oauth/google"
 
 interface User {
   email: string
