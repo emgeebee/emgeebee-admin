@@ -1,40 +1,42 @@
 import { LogOut, User } from "lucide-react"
+import { GoogleLogin } from "@react-oauth/google"
 import { AuthProvider, useAuth } from "@/contexts/AuthContext"
 import { Button } from "@/components/ui/Button"
 import { TokenList } from "@/components/TokenList"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card"
-import { GoogleLogin } from "@react-oauth/google"
+
+const APP_VERSION = __APP_VERSION__
 
 function LoginPage() {
   const { handleCredentialResponse } = useAuth()
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-3xl">Admin Portal</CardTitle>
-          <CardDescription>
-            Sign in with your Google account to manage API tokens
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex justify-center">
-            <GoogleLogin
-              onSuccess={handleCredentialResponse}
-              onError={() => {
-                console.error('Login Failed')
-              }}
-              useOneTap
-              size="large"
-              text="signin_with"
-              shape="rectangular"
-            />
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <div className="w-full max-w-sm space-y-4 rounded-md border border-border bg-card p-5">
+        <div className="space-y-1">
+          <div className="flex items-baseline justify-between gap-2">
+            <h1 className="text-lg font-semibold tracking-tight">Admin Portal</h1>
+            <span className="font-mono text-xs text-muted-foreground">v{APP_VERSION}</span>
           </div>
-          <p className="text-center text-xs text-muted-foreground">
-            Only authorized Google accounts can access this portal
+          <p className="text-sm text-muted-foreground">
+            Sign in with Google to manage API tokens
           </p>
-        </CardContent>
-      </Card>
+        </div>
+        <div className="flex justify-center">
+          <GoogleLogin
+            onSuccess={handleCredentialResponse}
+            onError={() => {
+              console.error("Login Failed")
+            }}
+            useOneTap
+            size="large"
+            text="signin_with"
+            shape="rectangular"
+          />
+        </div>
+        <p className="text-center text-xs text-muted-foreground">
+          Only authorized Google accounts can access this portal
+        </p>
+      </div>
     </div>
   )
 }
@@ -44,36 +46,37 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="container mx-auto flex items-center justify-between px-4 py-4">
-          <div>
-            <h1 className="text-2xl font-bold">Admin Portal</h1>
-            <p className="text-sm text-muted-foreground">Token Management</p>
+      <header className="border-b border-border">
+        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-3 py-2">
+          <div className="flex min-w-0 items-baseline gap-2">
+            <h1 className="truncate text-sm font-semibold tracking-tight">Admin Portal</h1>
+            <span className="shrink-0 font-mono text-[11px] text-muted-foreground">
+              v{APP_VERSION}
+            </span>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            <div className="flex min-w-0 items-center gap-1.5">
               {user?.picture ? (
                 <img
                   src={user.picture}
-                  alt={user.name}
-                  className="h-8 w-8 rounded-full"
+                  alt=""
+                  className="h-6 w-6 rounded-full"
                 />
               ) : (
-                <User className="h-8 w-8 rounded-full bg-muted p-1.5" />
+                <User className="h-6 w-6 rounded-full bg-muted p-1" />
               )}
-              <div className="hidden text-sm sm:block">
-                <p className="font-medium">{user?.name}</p>
-                <p className="text-muted-foreground">{user?.email}</p>
-              </div>
+              <span className="hidden max-w-[10rem] truncate text-xs text-muted-foreground sm:inline">
+                {user?.email}
+              </span>
             </div>
             <Button variant="outline" size="sm" onClick={logout}>
-              <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">Sign Out</span>
+              <LogOut className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Sign out</span>
             </Button>
           </div>
         </div>
       </header>
-      <main className="container mx-auto px-4 py-8">
+      <main className="mx-auto max-w-3xl px-3 py-3">
         <TokenList />
       </main>
     </div>
@@ -85,8 +88,8 @@ function AppContent() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
+      <div className="flex h-screen items-center justify-center text-sm text-muted-foreground">
+        Loading…
       </div>
     )
   }

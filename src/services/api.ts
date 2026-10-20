@@ -1,4 +1,4 @@
-import type { Token } from "@/types/token"
+import type { CreateTokenResponse, Token } from "@/types/token"
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://api.emgeebee.com"
 
@@ -16,7 +16,7 @@ class ApiError extends Error {
 
 async function fetchWithAuth(url: string, options: RequestInit = {}) {
   const token = localStorage.getItem("authToken")
-  
+
   const response = await fetch(`${API_BASE_URL}${url}`, {
     ...options,
     headers: {
@@ -44,9 +44,11 @@ export const tokenApi = {
     return result.tokens || []
   },
 
-  async create(): Promise<Token> {
+  async create(name?: string): Promise<CreateTokenResponse> {
+    const body = name?.trim() ? { name: name.trim() } : undefined
     return fetchWithAuth("/generateToken", {
       method: "POST",
+      ...(body && { body: JSON.stringify(body) }),
     })
   },
 

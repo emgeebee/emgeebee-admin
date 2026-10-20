@@ -1,1 +1,46 @@
 @import "tailwindcss";
+@config "../tailwind.config.js";
+
+:root {
+  color-scheme: dark;
+  --background: 222 14% 8%;
+  --foreground: 210 20% 92%;
+  --card: 222 12% 11%;
+  --card-foreground: 210 20% 92%;
+  --popover: 222 12% 11%;
+  --popover-foreground: 210 20% 92%;
+  --primary: 210 40% 72%;
+  --primary-foreground: 222 14% 8%;
+  --secondary: 222 10% 16%;
+  --secondary-foreground: 210 20% 88%;
+  --muted: 222 10% 15%;
+  --muted-foreground: 215 12% 58%;
+  --accent: 222 10% 18%;
+  --accent-foreground: 210 20% 92%;
+  --destructive: 0 62% 48%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 222 10% 18%;
+  --input: 222 10% 18%;
+  --ring: 210 40% 55%;
+  --radius: 0.375rem;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}

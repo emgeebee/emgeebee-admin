@@ -5,12 +5,13 @@ A modern, secure admin interface for managing long-lived API tokens. Built with 
 ## Features
 
 - **Google OAuth Authentication** - Secure login using Google accounts
-- **Token Generation** - Create new long-lived API tokens (valid for 365 days)
+- **Token Generation** - Create named long-lived API tokens (valid for 365 days)
 - **Token Management** - View and expire tokens
+- **Token Naming** - Label tokens so they are easy to identify
 - **Token Display** - Show/hide and copy tokens securely
 - **Expiration Tracking** - View when tokens were created and when they expire
-- **Responsive Design** - Works seamlessly on desktop and mobile devices
-- **Modern UI** - Clean, accessible interface built with Tailwind CSS
+- **App version** - Current package version shown in the UI
+- **Dark, compact UI** - Dense dark-mode admin layout
 
 ## Tech Stack
 
@@ -86,7 +87,7 @@ The application integrates with the [trackmyholidays-api](https://github.com/emg
 ### Endpoints
 
 ```
-POST /generateToken    - Generate a new long-lived token
+POST /generateToken    - Generate a new long-lived token (optional body: { name })
 GET  /tokens          - List all tokens for the authenticated user  
 POST /expireToken     - Expire/delete a token
 ```
@@ -99,10 +100,19 @@ POST /expireToken     - Expire/delete a token
   userid: string        // User ID who owns the token
   createdAt: string     // ISO 8601 timestamp
   expiresAt: string     // ISO 8601 timestamp
+  name?: string         // Optional human-readable label
 }
 ```
 
-### Generate Token Response
+### Generate Token
+
+Request body (optional):
+
+```typescript
+{ name?: string }
+```
+
+Response:
 
 ```typescript
 {
@@ -110,6 +120,7 @@ POST /expireToken     - Expire/delete a token
   sub: string          // Subject (user ID)
   expiresIn: string    // e.g. "365d"
   expiresAt: string    // ISO 8601 timestamp
+  name?: string         // Echoed label when provided
 }
 ```
 
