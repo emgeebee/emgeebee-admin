@@ -89,6 +89,7 @@ The application integrates with the [trackmyholidays-api](https://github.com/emg
 ```
 POST /generateToken    - Generate a new long-lived token (optional body: { name })
 GET  /tokens          - List all tokens for the authenticated user  
+POST /renameToken     - Rename a token ({ token, name })
 POST /expireToken     - Expire/delete a token
 ```
 
@@ -123,6 +124,14 @@ Response:
   name?: string         // Echoed label when provided
 }
 ```
+
+### Rename Token
+
+```typescript
+{ token: string, name: string }  // name trimmed, max 64 characters
+```
+
+The portal also stores the label in this browser. That copy is used when the API does not return `name`.
 
 ## Deployment to GitHub Pages
 
