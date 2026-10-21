@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { Plus, Trash2, AlertCircle, Key, Copy, Check } from "lucide-react"
+import { Plus, Trash2, AlertCircle, Key, Copy, Check, Pencil } from "lucide-react"
 import { format } from "date-fns"
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
@@ -108,6 +108,75 @@ function CreateTokenDialog({
   )
 }
 
+function RenameTokenDialog({
+  open,
+  onOpenChange,
+  token,
+  onRename,
+  isRenaming,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  token: Token | null
+  onRename: (name: string) => void
+  isRenaming: boolean
+}) {
+  const [name, setName] = useState("")
+
+  useEffect(() => {
+    if (open) setName(token?.name?.trim() ?? "")
+  }, [open, token])
+
+  const currentName = token?.name?.trim() ?? ""
+  const nextName = name.trim()
+  const unchanged = nextName === currentName
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-sm p-4">
+        <DialogClose onClose={() => onOpenChange(false)} />
+        <DialogHeader>
+          <DialogTitle>Rename token</DialogTitle>
+          <DialogDescription>
+            The token value stays the same. Only the label in the list changes.
+          </DialogDescription>
+        </DialogHeader>
+        {token && (
+          <form
+            className="mt-3 space-y-3"
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (!nextName || unchanged) return
+              onRename(nextName)
+            }}
+          >
+            <p className="truncate font-mono text-xs text-muted-foreground">
+              {token.token.slice(0, 8)}…{token.token.slice(-6)}
+            </p>
+            <Input
+              autoFocus
+              placeholder="e.g. CI, laptop, staging"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              disabled={isRenaming}
+              maxLength={64}
+              aria-label="Token name"
+            />
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" size="sm" disabled={isRenaming || !nextName || unchanged}>
+                {isRenaming ? "Saving…" : "Save"}
+              </Button>
+            </div>
+          </form>
+        )}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 function NewTokenDialog({
   open,
   onOpenChange,
@@ -186,6 +255,8 @@ export function TokenList() {
   const [createdName, setCreatedName] = useState<string | undefined>()
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [showNewTokenDialog, setShowNewTokenDialog] = useState(false)
+  const [renamingToken, setRenamingToken] = useState<Token | null>(null)
+  const [isRenaming, setIsRenaming] = useState(false)
 
   const loadTokens = async () => {
     setIsLoading(true)
@@ -224,6 +295,27 @@ export function TokenList() {
       setError(message)
     } finally {
       setIsCreating(false)
+    }
+  }
+
+  const handleRename = async (name: string) => {
+    if (!renamingToken) return
+    setIsRenaming(true)
+    setError(null)
+    try {
+      await tokenApi.rename(renamingToken.token, name)
+      rememberTokenName(renamingToken.token, name)
+      setTokens((current) =>
+        current.map((item) =>
+          item.token === renamingToken.token ? { ...item, name } : item
+        )
+      )
+      setRenamingToken(null)
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : "Failed to rename token"
+      setError(message)
+    } finally {
+      setIsRenaming(false)
     }
   }
 
@@ -288,14 +380,24 @@ export function TokenList() {
                     {format(new Date(token.expiresAt), "PP")}
                   </p>
                 </div>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => handleDelete(token.token)}
-                  aria-label="Expire token"
-                >
-                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                </Button>
+                <div className="flex shrink-0 items-center">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => setRenamingToken(token)}
+                    aria-label={`Rename ${token.name?.trim() || "unnamed token"}`}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => handleDelete(token.token)}
+                    aria-label="Expire token"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                  </Button>
+                </div>
               </div>
               <TokenDisplay token={token.token} />
             </li>
@@ -308,6 +410,16 @@ export function TokenList() {
         onOpenChange={setShowCreateDialog}
         onCreate={handleCreate}
         isCreating={isCreating}
+      />
+
+      <RenameTokenDialog
+        open={renamingToken !== null}
+        onOpenChange={(open) => {
+          if (!open && !isRenaming) setRenamingToken(null)
+        }}
+        token={renamingToken}
+        onRename={handleRename}
+        isRenaming={isRenaming}
       />
 
       <NewTokenDialog

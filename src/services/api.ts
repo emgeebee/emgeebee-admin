@@ -58,6 +58,31 @@ export const tokenApi = {
       body: JSON.stringify({ token }),
     })
   },
+
+  /**
+   * Rename a token. Returns persisted: false when /renameToken is not available
+   * (missing route, or the request never reaches the API), so the caller can
+   * still keep the label in the local name cache. Application errors are thrown.
+   */
+  async rename(token: string, name: string): Promise<{ persisted: boolean }> {
+    const trimmed = name.trim()
+    try {
+      await fetchWithAuth("/renameToken", {
+        method: "POST",
+        body: JSON.stringify({ token, name: trimmed }),
+      })
+      return { persisted: true }
+    } catch (err) {
+      if (err instanceof ApiError && !isRenameRouteUnavailable(err)) throw err
+      return { persisted: false }
+    }
+  },
+}
+
+function isRenameRouteUnavailable(err: unknown) {
+  if (!(err instanceof ApiError)) return false
+  if (err.status === 404) return true
+  return err.status === 403 && /missing authentication token/i.test(err.message)
 }
 
 export { ApiError }
